@@ -1,0 +1,2343 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AlgoRobust — Loan Risk Intelligence</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Playfair+Display:ital,wght@0,700;0,900;1,500&family=Lato:wght@300;400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ═══════════════════════════════════════════════
+   TOKENS
+═══════════════════════════════════════════════ */
+        :root {
+            --white: #ffffff;
+            --off: #f7f8fa;
+            --border: #e3e7ef;
+            --border2: #cdd3df;
+            --ink: #0f1623;
+            --ink2: #3a4256;
+            --muted: #7a84a0;
+            --blue: #1a56db;
+            --blue-lt: #e8effe;
+            --green: #0b7b4e;
+            --green-lt: #e6f5ef;
+            --red: #c0392b;
+            --red-lt: #fdecea;
+            --amber: #b45309;
+            --amber-lt: #fef3e2;
+            --shadow-sm: 0 1px 3px rgba(15, 22, 35, 0.08), 0 1px 2px rgba(15, 22, 35, 0.04);
+            --shadow-md: 0 4px 12px rgba(15, 22, 35, 0.10), 0 2px 4px rgba(15, 22, 35, 0.06);
+            --shadow-lg: 0 12px 32px rgba(15, 22, 35, 0.12), 0 4px 12px rgba(15, 22, 35, 0.08);
+            --radius: 8px;
+            --radius-lg: 14px;
+        }
+
+        /* ═══════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════ */
+        *,
+        *::before,
+        *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Lato', system-ui, sans-serif;
+            background: var(--off);
+            color: var(--ink);
+            min-height: 100vh;
+            font-size: 14px;
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* ═══════════════════════════════════════════════
+   PAGES
+═══════════════════════════════════════════════ */
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+        }
+
+        /* ═══════════════════════════════════════════════
+   AUTH PAGE
+═══════════════════════════════════════════════ */
+        #authPage {
+            min-height: 100vh;
+            display: none;
+            grid-template-columns: 1fr 1fr;
+        }
+
+        #authPage.active {
+            display: grid;
+        }
+
+        @media (max-width: 760px) {
+            #authPage.active {
+                grid-template-columns: 1fr;
+            }
+
+            .auth-left {
+                display: none;
+            }
+        }
+
+        .auth-left {
+            background: var(--ink);
+            padding: 60px 56px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .auth-left::before {
+            content: '';
+            position: absolute;
+            width: 480px;
+            height: 480px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(26, 86, 219, 0.25) 0%, transparent 70%);
+            top: -100px;
+            right: -120px;
+            pointer-events: none;
+        }
+
+        .auth-left::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(11, 123, 78, 0.20) 0%, transparent 70%);
+            bottom: -60px;
+            left: -80px;
+            pointer-events: none;
+        }
+
+        .auth-brand {
+            position: relative;
+            z-index: 1;
+        }
+
+        .brand-mark {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 48px;
+        }
+
+        .brand-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .brand-name {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--white);
+            letter-spacing: -0.3px;
+        }
+
+        .auth-headline {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: clamp(28px, 3.5vw, 42px);
+            font-weight: 900;
+            color: var(--white);
+            line-height: 1.15;
+            letter-spacing: -0.5px;
+            margin-bottom: 20px;
+        }
+
+        .auth-headline em {
+            color: #6fa8ff;
+            font-style: normal;
+        }
+
+        .auth-desc {
+            color: rgba(255, 255, 255, 0.55);
+            font-size: 15px;
+            line-height: 1.7;
+            max-width: 380px;
+        }
+
+        .auth-features {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            margin-top: 44px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .feat-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: rgba(255, 255, 255, 0.70);
+            font-size: 13px;
+        }
+
+        .feat-icon {
+            width: 28px;
+            height: 28px;
+            background: rgba(255, 255, 255, 0.08);
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .feat-icon svg {
+            width: 14px;
+            height: 14px;
+            stroke: rgba(255, 255, 255, 0.75);
+            fill: none;
+            stroke-width: 1.8;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        /* Auth stat cards */
+        .auth-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-top: 40px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-stat-card {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 10px;
+            padding: 16px;
+        }
+
+        .auth-stat-val {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 22px;
+            font-weight: 500;
+            color: #fff;
+            line-height: 1;
+            margin-bottom: 4px;
+        }
+
+        .auth-stat-key {
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.40);
+            letter-spacing: 0.3px;
+        }
+
+        /* Auth divider rule */
+        .auth-rule {
+            border: none;
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            margin: 32px 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .auth-foot {
+            color: rgba(255, 255, 255, 0.25);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            position: relative;
+            z-index: 1;
+        }
+
+        /* Auth right */
+        .auth-right {
+            background: var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 48px 40px;
+        }
+
+        .auth-box {
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .auth-tabs {
+            display: flex;
+            border-bottom: 2px solid var(--border);
+            margin-bottom: 32px;
+        }
+
+        .auth-tab {
+            flex: 1;
+            padding: 12px 0;
+            text-align: center;
+            font-weight: 700;
+            font-size: 14px;
+            color: var(--muted);
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -2px;
+            transition: color 0.2s, border-color 0.2s;
+            letter-spacing: 0.3px;
+        }
+
+        .auth-tab.active {
+            color: var(--blue);
+            border-bottom-color: var(--blue);
+        }
+
+        .auth-form {
+            display: none;
+        }
+
+        .auth-form.active {
+            display: block;
+        }
+
+        .auth-title {
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 26px;
+            font-weight: 700;
+            color: var(--ink);
+            margin-bottom: 6px;
+        }
+
+        .auth-sub {
+            color: var(--muted);
+            font-size: 13px;
+            margin-bottom: 28px;
+            line-height: 1.6;
+        }
+
+        .form-row {
+            margin-bottom: 18px;
+        }
+
+        .form-row label {
+            display: block;
+            font-weight: 700;
+            font-size: 12px;
+            color: var(--ink2);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            margin-bottom: 6px;
+        }
+
+        .form-row input {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--off);
+            font-family: 'Lato', sans-serif;
+            font-size: 14px;
+            color: var(--ink);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+        }
+
+        .form-row input:focus {
+            border-color: var(--blue);
+            background: var(--white);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.10);
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 13px;
+            background: var(--blue);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'Lato', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+            margin-top: 6px;
+        }
+
+        .auth-btn:hover {
+            background: #1547c0;
+            box-shadow: var(--shadow-md);
+        }
+
+        .auth-btn:active {
+            transform: scale(0.99);
+        }
+
+        .auth-switch {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+            color: var(--muted);
+        }
+
+        .auth-switch a {
+            color: var(--blue);
+            cursor: pointer;
+            font-weight: 700;
+            text-decoration: none;
+        }
+
+        .auth-switch a:hover {
+            text-decoration: underline;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 20px 0;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        /* ═══════════════════════════════════════════════
+   DASHBOARD
+═══════════════════════════════════════════════ */
+        #dashPage {
+            min-height: 100vh;
+            display: none;
+            flex-direction: column;
+        }
+
+        #dashPage.active {
+            display: flex;
+        }
+
+        /* Top nav */
+        .topnav {
+            background: var(--white);
+            border-bottom: 1px solid var(--border);
+            padding: 0 32px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: var(--shadow-sm);
+        }
+
+        .nav-brand {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-icon {
+            width: 32px;
+            height: 32px;
+            background: var(--blue);
+            border-radius: 7px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-name {
+            font-family: 'Playfair Display', serif;
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: -0.2px;
+        }
+
+        .nav-badge {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            background: var(--blue-lt);
+            color: var(--blue);
+            padding: 2px 8px;
+            border-radius: 100px;
+            font-weight: 500;
+        }
+
+        .nav-right {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .nav-user {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ink2);
+        }
+
+        .nav-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .nav-logout {
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid var(--border);
+            background: transparent;
+            font-family: 'Lato', sans-serif;
+            font-weight: 700;
+            transition: all 0.15s;
+        }
+
+        .nav-logout:hover {
+            border-color: var(--red);
+            color: var(--red);
+        }
+
+        /* Dashboard body */
+        .dash-body {
+            flex: 1;
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 0;
+            align-items: start;
+            max-width: 1400px;
+            margin: 0 auto;
+            width: 100%;
+            padding: 28px 32px;
+            gap: 28px;
+        }
+
+        @media (max-width: 900px) {
+            .dash-body {
+                grid-template-columns: 1fr;
+                padding: 20px 16px;
+            }
+        }
+
+        /* ── LEFT PANEL ── */
+        .left-col {}
+
+        .panel-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            padding: 18px 22px 16px;
+            border-bottom: 1px solid var(--border);
+            background: var(--off);
+        }
+
+        .panel-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: 0.3px;
+            text-transform: uppercase;
+        }
+
+        .panel-sub-title {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .panel-body {
+            padding: 22px;
+        }
+
+        /* Fields */
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .field-label {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+        }
+
+        .field-num-badge {
+            width: 20px;
+            height: 20px;
+            background: var(--ink);
+            color: var(--white);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            font-weight: 500;
+            flex-shrink: 0;
+        }
+
+        .field-name {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink2);
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+        }
+
+        .field-hint {
+            font-size: 11px;
+            color: var(--muted);
+            margin-bottom: 7px;
+            padding-left: 28px;
+        }
+
+        .field-group input[type="number"] {
+            width: 100%;
+            padding: 10px 13px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            color: var(--ink);
+            background: var(--white);
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -moz-appearance: textfield;
+        }
+
+        .field-group input::-webkit-inner-spin-button,
+        .field-group input::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+        }
+
+        .field-group input:focus {
+            border-color: var(--blue);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.10);
+        }
+
+        .field-group input.filled {
+            border-color: #a7c9a0;
+            background: #fcfffe;
+        }
+
+        /* Credit radio */
+        .credit-opts {
+            display: flex;
+            gap: 8px;
+        }
+
+        .credit-opt {
+            flex: 1;
+            padding: 10px 14px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            text-align: center;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--muted);
+            transition: all 0.18s;
+            user-select: none;
+            background: var(--white);
+        }
+
+        .credit-opt:hover {
+            border-color: var(--border2);
+            color: var(--ink2);
+        }
+
+        .credit-opt.good-sel {
+            border-color: var(--green);
+            background: var(--green-lt);
+            color: var(--green);
+        }
+
+        .credit-opt.bad-sel {
+            border-color: var(--red);
+            background: var(--red-lt);
+            color: var(--red);
+        }
+
+        /* Dividers */
+        .section-divider {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 20px 0;
+        }
+
+        /* Noise & selects */
+        .control-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--ink2);
+            text-transform: uppercase;
+            letter-spacing: 0.7px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .control-value {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 13px;
+            color: var(--blue);
+            font-weight: 500;
+        }
+
+        input[type="range"] {
+            width: 100%;
+            -webkit-appearance: none;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            background: var(--white);
+            border: 2px solid var(--blue);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: var(--shadow-sm);
+            transition: box-shadow 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            box-shadow: 0 0 0 4px rgba(26, 86, 219, 0.15);
+        }
+
+        .noise-scale {
+            display: flex;
+            justify-content: space-between;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 5px;
+        }
+
+        .ctrl-select {
+            width: 100%;
+            padding: 9px 12px;
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            background: var(--white);
+            font-family: 'Lato', sans-serif;
+            font-size: 13px;
+            color: var(--ink);
+            outline: none;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .ctrl-select:focus {
+            border-color: var(--blue);
+        }
+
+        /* Algo chips */
+        .algo-chips-wrap {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .achip {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 5px 10px;
+            border: 1.5px solid var(--border);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            user-select: none;
+            background: var(--white);
+        }
+
+        .achip-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .achip.on {
+            color: var(--ink);
+            border-color: var(--ink);
+            background: var(--off);
+        }
+
+        /* Threshold row */
+        .thresh-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 7px;
+        }
+
+        /* Run button */
+        .run-btn {
+            width: 100%;
+            margin-top: 22px;
+            padding: 13px;
+            background: var(--ink);
+            color: var(--white);
+            border: none;
+            border-radius: var(--radius);
+            font-family: 'Lato', sans-serif;
+            font-size: 15px;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.3px;
+            transition: background 0.2s, box-shadow 0.2s, transform 0.1s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .run-btn:hover:not(:disabled) {
+            background: var(--blue);
+            box-shadow: var(--shadow-md);
+        }
+
+        .run-btn:active:not(:disabled) {
+            transform: scale(0.99);
+        }
+
+        .run-btn:disabled {
+            background: var(--border2);
+            color: var(--muted);
+            cursor: not-allowed;
+        }
+
+        /* ── RIGHT COL ── */
+        .right-col {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        /* Placeholder */
+        .empty-state {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 80px 40px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .empty-icon {
+            opacity: 0.6;
+            margin-bottom: 4px;
+        }
+
+        .empty-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--ink);
+        }
+
+        .empty-sub {
+            font-size: 13px;
+            color: var(--muted);
+            max-width: 300px;
+            line-height: 1.7;
+        }
+
+        /* Verdict banner */
+        .verdict-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            padding: 20px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            flex-wrap: wrap;
+        }
+
+        .verdict-card.approved {
+            border-left: 4px solid var(--green);
+        }
+
+        .verdict-card.rejected {
+            border-left: 4px solid var(--red);
+        }
+
+        .verdict-left {}
+
+        .verdict-tag {
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+
+        .verdict-main {
+            font-family: 'Playfair Display', serif;
+            font-size: 24px;
+            font-weight: 700;
+            line-height: 1.1;
+        }
+
+        .verdict-card.approved .verdict-main {
+            color: var(--green);
+        }
+
+        .verdict-card.rejected .verdict-main {
+            color: var(--red);
+        }
+
+        .verdict-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 4px;
+        }
+
+        .verdict-score {
+            text-align: right;
+        }
+
+        .score-ring {
+            width: 70px;
+            height: 70px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .score-ring svg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            transform: rotate(-90deg);
+        }
+
+        .score-num {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 15px;
+            font-weight: 500;
+            color: var(--ink);
+            z-index: 1;
+        }
+
+        .score-label {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 4px;
+            text-align: center;
+        }
+
+        /* Stats strip */
+        .stats-strip {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+            gap: 12px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            box-shadow: var(--shadow-sm);
+            border-top: 3px solid var(--c, var(--border2));
+        }
+
+        .stat-algo-name {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--c, var(--muted));
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+        }
+
+        .stat-acc {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 21px;
+            font-weight: 500;
+            color: var(--ink);
+            line-height: 1;
+        }
+
+        .stat-drop {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+        }
+
+        .stat-thr {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--c);
+            margin-top: 6px;
+        }
+
+        /* Chart card */
+        .result-card {
+            background: var(--white);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-sm);
+            overflow: hidden;
+        }
+
+        .result-card-header {
+            padding: 16px 22px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .rc-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: var(--ink);
+            letter-spacing: 0.2px;
+        }
+
+        .rc-sub {
+            font-size: 12px;
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .result-card-body {
+            padding: 20px 22px;
+        }
+
+        /* Two-col for chart + confusion */
+        .chart-cm-row {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr;
+            gap: 20px;
+        }
+
+        @media (max-width: 1100px) {
+            .chart-cm-row {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        /* Confusion Matrix */
+        .cm-algo-tabs {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+
+        .cm-tab {
+            padding: 4px 10px;
+            border-radius: 100px;
+            border: 1.5px solid var(--border);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            background: var(--white);
+        }
+
+        .cm-tab.active {
+            border-color: var(--c);
+            color: var(--c);
+            background: rgba(var(--cr), 0.07);
+        }
+
+        .cm-grid-wrap {
+            display: grid;
+            grid-template-columns: 28px 1fr 1fr;
+            grid-template-rows: 28px 1fr 1fr;
+            gap: 6px;
+        }
+
+        .cm-blank {}
+
+        .cm-axis {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .cm-axis.vert {
+            writing-mode: vertical-lr;
+            transform: rotate(180deg);
+            font-size: 9px;
+        }
+
+        .cm-cell {
+            border-radius: var(--radius);
+            padding: 14px 10px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            transition: all 0.4s ease;
+        }
+
+        .cm-cell.tp {
+            background: #eaf5ef;
+            border: 1.5px solid #a7d7b9;
+        }
+
+        .cm-cell.tn {
+            background: #eaf5ef;
+            border: 1.5px solid #a7d7b9;
+        }
+
+        .cm-cell.fp {
+            background: #fdecea;
+            border: 1.5px solid #f0b9b4;
+        }
+
+        .cm-cell.fn {
+            background: #fdecea;
+            border: 1.5px solid #f0b9b4;
+        }
+
+        .cm-val {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 22px;
+            font-weight: 500;
+            color: var(--ink);
+        }
+
+        .cm-lbl {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 9px;
+            color: var(--muted);
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        .cm-metrics-row {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 14px;
+        }
+
+        .cm-metric-pill {
+            background: var(--off);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 6px 12px;
+            text-align: center;
+        }
+
+        .cm-metric-val {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--ink);
+        }
+
+        .cm-metric-key {
+            font-size: 10px;
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        /* Robustness ranking */
+        .rob-rows {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .rob-row {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .rob-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+        }
+
+        .rob-algo-name {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .rob-score-txt {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: var(--muted);
+        }
+
+        .rob-bar-bg {
+            height: 6px;
+            background: var(--off);
+            border-radius: 3px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        .rob-bar-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .rob-cap {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            color: var(--muted);
+        }
+
+        /* Metrics table */
+        .metrics-tbl {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .metrics-tbl th {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.8px;
+            text-transform: uppercase;
+            color: var(--muted);
+            padding: 8px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .metrics-tbl td {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 12px;
+            padding: 10px 14px;
+            border-bottom: 1px solid var(--border);
+            color: var(--ink);
+        }
+
+        .metrics-tbl tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .metrics-tbl tbody tr:hover td {
+            background: var(--off);
+        }
+
+        .metrics-tbl td.algo-col {
+            font-family: 'Lato', sans-serif;
+            font-weight: 700;
+            font-size: 13px;
+        }
+
+        .bar-cell {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .bar-mini {
+            height: 4px;
+            border-radius: 2px;
+        }
+
+        /* Conclusion */
+        .conclusion-card {
+            background: var(--ink);
+            border-radius: var(--radius-lg);
+            padding: 24px 28px;
+            color: var(--white);
+        }
+
+        .conc-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .conc-tag {
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.40);
+        }
+
+        .conc-body {
+            font-size: 14px;
+            line-height: 1.8;
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .conc-body strong {
+            color: #a8c5ff;
+        }
+
+        .conc-chips {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 16px;
+        }
+
+        .conc-chip {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            padding: 5px 12px;
+            border: 1px solid rgba(255, 255, 255, 0.12);
+            border-radius: 100px;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.70);
+        }
+
+        /* Loading bar */
+        .loading-bar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 3px;
+            background: var(--blue);
+            z-index: 9999;
+            display: none;
+        }
+
+        .loading-bar.on {
+            display: block;
+            animation: load 0.8s ease-out forwards;
+        }
+
+        @keyframes load {
+            0% {
+                width: 0
+            }
+
+            70% {
+                width: 80%
+            }
+
+            100% {
+                width: 100%
+            }
+        }
+
+        /* Animations */
+        .fade-up {
+            animation: fadeUp 0.35s ease both;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 28px;
+            right: 28px;
+            background: var(--ink);
+            color: white;
+            padding: 12px 20px;
+            border-radius: var(--radius);
+            font-size: 13px;
+            font-weight: 700;
+            box-shadow: var(--shadow-lg);
+            z-index: 9999;
+            animation: fadeUp 0.3s ease both;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="loading-bar" id="loadingBar"></div>
+
+    <!-- ══════════════════════════════════════════════
+     AUTH PAGE
+══════════════════════════════════════════════ -->
+    <div id="authPage" class="page active">
+
+        <!-- Left brand panel -->
+        <div class="auth-left">
+            <div class="auth-brand">
+
+                <div class="brand-mark">
+                    <div class="brand-icon">
+                        <svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <rect x="2" y="10" width="3" height="8" rx="1" fill="white" opacity="0.9" />
+                            <rect x="7" y="6" width="3" height="12" rx="1" fill="white" opacity="0.9" />
+                            <rect x="12" y="2" width="3" height="16" rx="1" fill="white" opacity="0.9" />
+                            <path d="M3.5 9.5L8.5 5.5L13.5 1.5" stroke="white" stroke-width="1.5" stroke-linecap="round"
+                                opacity="0.5" />
+                        </svg>
+                    </div>
+                    <div class="brand-name">AlgoRobust</div>
+                </div>
+
+                <div class="auth-headline">
+                    Loan Risk<br><em>Robustness</em><br>Intelligence
+                </div>
+                <div class="auth-desc">
+                    Enter applicant data and evaluate how five machine learning algorithms respond to noise — predicting
+                    loan risk with comparative robustness testing.
+                </div>
+
+                <hr class="auth-rule">
+
+                <div class="auth-features">
+                    <div class="feat-pill">
+                        <div class="feat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                            </svg>
+                        </div>
+                        Live noise simulation across algorithms
+                    </div>
+                    <div class="feat-pill">
+                        <div class="feat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                                <polyline points="17 6 23 6 23 12" />
+                            </svg>
+                        </div>
+                        Degradation curves &amp; robustness rankings
+                    </div>
+                    <div class="feat-pill">
+                        <div class="feat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="3" width="7" height="7" rx="1" />
+                                <rect x="14" y="3" width="7" height="7" rx="1" />
+                                <rect x="3" y="14" width="7" height="7" rx="1" />
+                                <rect x="14" y="14" width="7" height="7" rx="1" />
+                            </svg>
+                        </div>
+                        Confusion matrix &amp; performance metrics
+                    </div>
+                    <div class="feat-pill">
+                        <div class="feat-icon">
+                            <svg viewBox="0 0 24 24">
+                                <rect x="3" y="11" width="18" height="11" rx="2" />
+                                <path d="M7 11V7a5 5 0 0 1 10 0v4" />
+                            </svg>
+                        </div>
+                        Input-driven model — no fixed dataset
+                    </div>
+                </div>
+
+                <div class="auth-stats">
+                    <div class="auth-stat-card">
+                        <div class="auth-stat-val">5</div>
+                        <div class="auth-stat-key">ML Algorithms</div>
+                    </div>
+                    <div class="auth-stat-card">
+                        <div class="auth-stat-val">50%</div>
+                        <div class="auth-stat-key">Max Noise Range</div>
+                    </div>
+                    <div class="auth-stat-card">
+                        <div class="auth-stat-val">4</div>
+                        <div class="auth-stat-key">Noise Types</div>
+                    </div>
+                    <div class="auth-stat-card">
+                        <div class="auth-stat-val">Live</div>
+                        <div class="auth-stat-key">Real-time Updates</div>
+                    </div>
+                </div>
+
+            </div>
+            <div class="auth-foot">AlgoRobust v2.1 &nbsp;·&nbsp; Research Edition &nbsp;·&nbsp; 2025</div>
+        </div>
+
+        <!-- Right form panel -->
+        <div class="auth-right">
+            <div class="auth-box">
+
+                <div class="auth-tabs">
+                    <div class="auth-tab active" id="tabLogin" onclick="switchTab('login')">Sign In</div>
+                    <div class="auth-tab" id="tabSignup" onclick="switchTab('signup')">Create Account</div>
+                </div>
+
+                <!-- Login -->
+                <div class="auth-form active" id="formLogin">
+                    <div class="auth-title">Welcome back</div>
+                    <div class="auth-sub">Sign in to access your robustness testing dashboard.</div>
+
+                    <div class="form-row">
+                        <label>Email address</label>
+                        <input type="email" id="loginEmail" placeholder="you@example.com">
+                    </div>
+                    <div class="form-row">
+                        <label>Password</label>
+                        <input type="password" id="loginPass" placeholder="••••••••">
+                    </div>
+
+                    <button class="auth-btn" onclick="doLogin()">Sign In →</button>
+
+                    <div class="divider">or</div>
+
+                    <button class="auth-btn"
+                        style="background:var(--off);color:var(--ink);border:1.5px solid var(--border);"
+                        onclick="doDemo()">
+                        Continue with Demo Account
+                    </button>
+
+                    <div class="auth-switch">
+                        No account? <a onclick="switchTab('signup')">Create one</a>
+                    </div>
+                </div>
+
+                <!-- Sign up -->
+                <div class="auth-form" id="formSignup">
+                    <div class="auth-title">Create account</div>
+                    <div class="auth-sub">Get started with AlgoRobust — free research access.</div>
+
+                    <div class="form-row">
+                        <label>Full name</label>
+                        <input type="text" id="signupName">
+                    </div>
+                    <div class="form-row">
+                        <label>Email address</label>
+                        <input type="email" id="signupEmail">
+                    </div>
+                    <div class="form-row">
+                        <label>Password</label>
+                        <input type="password" id="signupPass" placeholder="Create a password">
+                    </div>
+
+                    <button class="auth-btn" onclick="doSignup()">Create Account →</button>
+
+                    <div class="auth-switch">
+                        Already have an account? <a onclick="switchTab('login')">Sign in</a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+     DASHBOARD
+══════════════════════════════════════════════ -->
+    <div id="dashPage" class="page">
+
+        <!-- Nav -->
+        <nav class="topnav">
+            <div class="nav-brand">
+                <div class="nav-icon">
+                    <svg width="16" height="16" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <rect x="2" y="10" width="3" height="8" rx="1" fill="white" opacity="0.9" />
+                        <rect x="7" y="6" width="3" height="12" rx="1" fill="white" opacity="0.9" />
+                        <rect x="12" y="2" width="3" height="16" rx="1" fill="white" opacity="0.9" />
+                    </svg>
+                </div>
+                <div class="nav-name">AlgoRobust</div>
+                <div class="nav-badge">Research</div>
+            </div>
+            <div class="nav-right">
+                <div class="nav-user">
+                    <div class="nav-avatar" id="navAvatar">?</div>
+                    <span id="navName">User</span>
+                </div>
+                <button class="nav-logout" onclick="doLogout()">Sign Out</button>
+            </div>
+        </nav>
+
+        <!-- Body -->
+        <div class="dash-body">
+
+            <!-- LEFT: Inputs -->
+            <div class="left-col">
+                <div class="panel-card">
+                    <div class="panel-header">
+                        <div class="panel-title">Applicant Profile</div>
+                        <div class="panel-sub-title">All five fields required</div>
+                    </div>
+                    <div class="panel-body">
+
+                        <!-- 01 Applicant Income -->
+                        <div class="field-group">
+                            <div class="field-label">
+                                <div class="field-num-badge">1</div>
+                                <div class="field-name">Applicant Income</div>
+                            </div>
+                            <div class="field-hint">Monthly gross income in ₹</div>
+                            <input type="number" id="appIncome" placeholder="e.g. 45000" min="0"
+                                oninput="onField(this)">
+                        </div>
+
+                        <!-- 02 Co-applicant Income -->
+                        <div class="field-group">
+                            <div class="field-label">
+                                <div class="field-num-badge">2</div>
+                                <div class="field-name">Co-applicant Income</div>
+                            </div>
+                            <div class="field-hint">Monthly gross income in ₹ — enter 0 if none</div>
+                            <input type="number" id="coAppIncome" placeholder="e.g. 15000 or 0" min="0"
+                                oninput="onField(this)">
+                        </div>
+
+                        <!-- 03 Loan Amount -->
+                        <div class="field-group">
+                            <div class="field-label">
+                                <div class="field-num-badge">3</div>
+                                <div class="field-name">Loan Amount</div>
+                            </div>
+                            <div class="field-hint">In ₹ thousands — e.g. 120 = ₹1,20,000</div>
+                            <input type="number" id="loanAmt" placeholder="e.g. 120" min="1" oninput="onField(this)">
+                        </div>
+
+                        <!-- 04 Loan Term -->
+                        <div class="field-group">
+                            <div class="field-label">
+                                <div class="field-num-badge">4</div>
+                                <div class="field-name">Loan Amount Term</div>
+                            </div>
+                            <div class="field-hint">Repayment duration in months — e.g. 360 = 30 yrs</div>
+                            <input type="number" id="loanTerm" placeholder="e.g. 360" min="12" max="480"
+                                oninput="onField(this)">
+                        </div>
+
+                        <!-- 05 Credit History -->
+                        <div class="field-group">
+                            <div class="field-label">
+                                <div class="field-num-badge">5</div>
+                                <div class="field-name">Credit History</div>
+                            </div>
+                            <div class="field-hint">Has applicant cleared all prior debts?</div>
+                            <div class="credit-opts">
+                                <div class="credit-opt" id="creditGood" onclick="setCredit(1)">✓ Good (1)</div>
+                                <div class="credit-opt" id="creditBad" onclick="setCredit(0)">✗ Poor (0)</div>
+                            </div>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- Noise -->
+                        <div style="margin-bottom:16px;">
+                            <div class="control-label">
+                                Noise Injection
+                                <span class="control-value" id="noiseValLbl">0%</span>
+                            </div>
+                            <input type="range" id="noiseSlider" min="0" max="50" value="0"
+                                oninput="onNoise(this.value)">
+                            <div class="noise-scale">
+                                <span>0% Clean</span><span>25% Moderate</span><span>50% Severe</span>
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:16px;">
+                            <div class="control-label" style="margin-bottom:6px;">Noise Type</div>
+                            <select class="ctrl-select" id="noiseType"
+                                onchange="onNoise(document.getElementById('noiseSlider').value)">
+                                <option value="gaussian">Gaussian — Feature Perturbation</option>
+                                <option value="label">Label Noise — Annotation Errors</option>
+                                <option value="missing">Missing Values — Dropout</option>
+                                <option value="adversarial">Adversarial — Targeted Attack</option>
+                            </select>
+                        </div>
+
+                        <hr class="section-divider">
+
+                        <!-- Algorithms -->
+                        <div style="margin-bottom:16px;">
+                            <div class="control-label" style="margin-bottom:8px;">Algorithms</div>
+                            <div class="algo-chips-wrap" id="algoChips"></div>
+                        </div>
+
+                        <!-- Threshold -->
+                        <div>
+                            <div class="thresh-row">
+                                <div class="control-label" style="margin:0;">Max Acceptable Drop</div>
+                                <div class="control-value" id="threshLbl">10%</div>
+                            </div>
+                            <input type="range" id="threshSlider" min="5" max="30" value="10"
+                                oninput="onThresh(this.value)">
+                        </div>
+
+                        <button class="run-btn" id="runBtn" disabled onclick="runAll()">
+                            <span id="btnTxt">Fill all fields to run</span>
+                        </button>
+
+                    </div>
+                </div>
+            </div>
+
+            <!-- RIGHT: Results -->
+            <div class="right-col" id="rightCol">
+
+                <!-- Empty state -->
+                <div class="empty-state" id="emptyState">
+                    <div class="empty-icon">
+                        <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#cdd3df" stroke-width="1.2"
+                            stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="3" width="18" height="18" rx="2" />
+                            <path d="M3 9h18M9 21V9" />
+                        </svg>
+                    </div>
+                    <div class="empty-title">No analysis yet</div>
+                    <div class="empty-sub">Complete the applicant profile on the left and click Run to start comparative
+                        robustness testing.</div>
+                </div>
+
+                <!-- Verdict (hidden until run) -->
+                <div id="verdictCard" class="verdict-card hidden"></div>
+
+                <!-- Stats strip -->
+                <div id="statsStrip" class="stats-strip hidden"></div>
+
+                <!-- Chart + Confusion Matrix -->
+                <div class="chart-cm-row hidden" id="chartCmRow">
+
+                    <!-- Chart -->
+                    <div class="result-card">
+                        <div class="result-card-header">
+                            <div>
+                                <div class="rc-title">Accuracy Degradation Curve</div>
+                                <div class="rc-sub">Performance vs. noise injection level</div>
+                            </div>
+                        </div>
+                        <div class="result-card-body" style="height:300px;position:relative;">
+                            <canvas id="mainChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Confusion Matrix -->
+                    <div class="result-card">
+                        <div class="result-card-header">
+                            <div>
+                                <div class="rc-title">Confusion Matrix</div>
+                                <div class="rc-sub">At current noise level</div>
+                            </div>
+                        </div>
+                        <div class="result-card-body">
+                            <div class="cm-algo-tabs" id="cmTabs"></div>
+
+                            <div class="cm-grid-wrap">
+                                <!-- row 0 -->
+                                <div class="cm-blank"></div>
+                                <div class="cm-axis" style="font-size:9px;">Pred +</div>
+                                <div class="cm-axis" style="font-size:9px;">Pred −</div>
+                                <!-- row 1 -->
+                                <div class="cm-axis vert">Actual +</div>
+                                <div class="cm-cell tp">
+                                    <div class="cm-val" id="cmTP">—</div>
+                                    <div class="cm-lbl">TP</div>
+                                </div>
+                                <div class="cm-cell fp">
+                                    <div class="cm-val" id="cmFP">—</div>
+                                    <div class="cm-lbl">FP</div>
+                                </div>
+                                <!-- row 2 -->
+                                <div class="cm-axis vert">Actual −</div>
+                                <div class="cm-cell fn">
+                                    <div class="cm-val" id="cmFN">—</div>
+                                    <div class="cm-lbl">FN</div>
+                                </div>
+                                <div class="cm-cell tn">
+                                    <div class="cm-val" id="cmTN">—</div>
+                                    <div class="cm-lbl">TN</div>
+                                </div>
+                            </div>
+
+                            <div class="cm-metrics-row" id="cmMetrics"></div>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- Robustness Ranking -->
+                <div class="result-card hidden" id="robCard">
+                    <div class="result-card-header">
+                        <div>
+                            <div class="rc-title">Robustness Ranking</div>
+                            <div class="rc-sub">Noise tolerance before performance drops below threshold</div>
+                        </div>
+                    </div>
+                    <div class="result-card-body">
+                        <div class="rob-rows" id="robRows"></div>
+                    </div>
+                </div>
+
+                <!-- Metrics Table -->
+                <div class="result-card hidden" id="metricsCard">
+                    <div class="result-card-header">
+                        <div class="rc-title">Performance Metrics at Current Noise</div>
+                    </div>
+                    <div style="overflow-x:auto;">
+                        <table class="metrics-tbl">
+                            <thead>
+                                <tr>
+                                    <th>Algorithm</th>
+                                    <th>Accuracy</th>
+                                    <th>F1-Score</th>
+                                    <th>Precision</th>
+                                    <th>Recall</th>
+                                </tr>
+                            </thead>
+                            <tbody id="metricsBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Conclusion -->
+                <div class="conclusion-card hidden" id="conclusionCard">
+                    <div class="conc-header">
+                        <div class="conc-tag">◈ Research Conclusion</div>
+                    </div>
+                    <div class="conc-body" id="concBody"></div>
+                    <div class="conc-chips" id="concChips"></div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════ -->
+    <script>
+        /* ── ALGOS ── */
+        const ALGOS = [
+            { id: 'rf', name: 'Random Forest', short: 'RF', color: '#1a56db', rgb: '26,86,219', active: true },
+            { id: 'lr', name: 'Logistic Reg.', short: 'LR', color: '#c0392b', rgb: '192,57,43', active: true },
+            { id: 'svm', name: 'SVM', short: 'SVM', color: '#0b7b4e', rgb: '11,123,78', active: true },
+            { id: 'dt', name: 'Decision Tree', short: 'DT', color: '#7c3aed', rgb: '124,58,237', active: true },
+            { id: 'knn', name: 'KNN', short: 'KNN', color: '#b45309', rgb: '180,83,9', active: false },
+        ];
+
+        const ALGO_TRAITS = {
+            rf: { robustness: 0.93, sensitivity: 0.52 },
+            lr: { robustness: 0.72, sensitivity: 1.12 },
+            svm: { robustness: 0.84, sensitivity: 0.78 },
+            dt: { robustness: 0.67, sensitivity: 1.28 },
+            knn: { robustness: 0.77, sensitivity: 0.95 },
+        };
+
+        const NOISE_MULT = { gaussian: 1.0, label: 1.15, missing: 0.85, adversarial: 1.30 };
+
+        /* ── STATE ── */
+        let creditHistory = null;
+        let noiseLevel = 0;
+        let threshDrop = 10;
+        let mainChart = null;
+        let hasRun = false;
+        let selectedCmAlgo = 'rf';
+        let currentUser = null;
+
+        /* ── AUTH ── */
+        function switchTab(tab) {
+            document.getElementById('tabLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('tabSignup').classList.toggle('active', tab === 'signup');
+            document.getElementById('formLogin').classList.toggle('active', tab === 'login');
+            document.getElementById('formSignup').classList.toggle('active', tab === 'signup');
+        }
+
+        function doLogin() {
+            const email = document.getElementById('loginEmail').value.trim();
+            const pass = document.getElementById('loginPass').value;
+            if (!email || !pass) { showToast('Please fill in all fields'); return; }
+            loginUser(email.split('@')[0] || 'User');
+        }
+
+        function doSignup() {
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const pass = document.getElementById('signupPass').value;
+            if (!name || !email || !pass) { showToast('Please fill in all fields'); return; }
+            loginUser(name);
+        }
+
+        function doDemo() { loginUser('Demo User'); }
+
+        function loginUser(name) {
+            currentUser = name;
+            document.getElementById('navName').textContent = name;
+            document.getElementById('navAvatar').textContent = name.charAt(0).toUpperCase();
+            document.getElementById('authPage').classList.remove('active');
+            document.getElementById('dashPage').classList.add('active');
+            initDash();
+        }
+
+        function doLogout() {
+            document.getElementById('dashPage').classList.remove('active');
+            document.getElementById('authPage').classList.add('active');
+            hasRun = false;
+            resetResults();
+        }
+
+        /* ── DASH INIT ── */
+        function initDash() {
+            buildChips();
+            buildCmTabs();
+            if (!mainChart) initChart();
+        }
+
+        function buildChips() {
+            const el = document.getElementById('algoChips');
+            el.innerHTML = '';
+            ALGOS.forEach(a => {
+                const d = document.createElement('div');
+                d.className = 'achip' + (a.active ? ' on' : '');
+                d.innerHTML = `<div class="achip-dot" style="background:${a.active ? a.color : '#cdd3df'}"></div>${a.short}`;
+                d.onclick = () => {
+                    a.active = !a.active;
+                    d.classList.toggle('on', a.active);
+                    d.querySelector('.achip-dot').style.background = a.active ? a.color : '#cdd3df';
+                    if (hasRun) render();
+                };
+                el.appendChild(d);
+            });
+        }
+
+        function buildCmTabs() {
+            const el = document.getElementById('cmTabs');
+            el.innerHTML = '';
+            ALGOS.forEach(a => {
+                const b = document.createElement('div');
+                b.className = 'cm-tab' + (a.id === selectedCmAlgo ? ' active' : '');
+                b.style.setProperty('--c', a.color);
+                b.style.setProperty('--cr', a.rgb);
+                b.textContent = a.short;
+                b.onclick = () => {
+                    selectedCmAlgo = a.id;
+                    document.querySelectorAll('.cm-tab').forEach((x, i) => {
+                        x.classList.toggle('active', ALGOS[i].id === selectedCmAlgo);
+                    });
+                    if (hasRun) updateCM();
+                };
+                el.appendChild(b);
+            });
+        }
+
+        function initChart() {
+            const ctx = document.getElementById('mainChart').getContext('2d');
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: {
+                        legend: {
+                            labels: { color: '#7a84a0', font: { family: 'IBM Plex Mono', size: 10 }, boxWidth: 10, padding: 14 }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f1623', borderColor: '#e3e7ef', borderWidth: 1,
+                            titleColor: '#7a84a0', bodyColor: '#ffffff',
+                            titleFont: { family: 'IBM Plex Mono', size: 10 }, bodyFont: { family: 'IBM Plex Mono', size: 11 },
+                            callbacks: { label: ctx => ` ${ctx.dataset.label}: ${(ctx.parsed.y * 100).toFixed(1)}%` }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#7a84a0', font: { family: 'IBM Plex Mono', size: 10 } },
+                            grid: { color: 'rgba(227,231,239,0.8)' },
+                            title: { display: true, text: 'Noise Level (%)', color: '#7a84a0', font: { family: 'IBM Plex Mono', size: 10 } }
+                        },
+                        y: {
+                            min: 0.35, max: 1,
+                            ticks: { color: '#7a84a0', font: { family: 'IBM Plex Mono', size: 10 }, callback: v => (v * 100).toFixed(0) + '%' },
+                            grid: { color: 'rgba(227,231,239,0.8)' },
+                        }
+                    }
+                }
+            });
+        }
+
+        let aiResults = {};
+
+        /* ── MODEL ── */
+        function computeBaseP() {
+            const active = ALGOS.filter(a => a.active);
+            if (active.length === 0) return 0.5;
+            let baseAlgo = active.find(a => a.id === 'rf') || active[0];
+            let firstRes = aiResults[baseAlgo.id];
+            if (!firstRes) return 0.5;
+            return (100 - firstRes.risk_score) / 100;
+        }
+
+        function accAt(algoId, noise) {
+            const res = aiResults[algoId];
+            if (!res || !res.degradation_data) return 0.5;
+            const idx = Math.min(10, Math.floor(noise / 5));
+            return res.degradation_data[idx] / 100;
+        }
+
+        function curve(algoId) {
+            const res = aiResults[algoId];
+            if (!res || !res.degradation_data) return Array(11).fill(0.5);
+            return res.degradation_data.map(v => v / 100);
+        }
+
+        function threshNoise(algoId) {
+            const arr = curve(algoId);
+            const base = arr[0];
+            const target = base * (1 - threshDrop / 100);
+            for (let i = 0; i < arr.length; i++) {
+                if (arr[i] < target) return i * 5;
+            }
+            return 50;
+        }
+
+        /* ── EVENTS ── */
+        function setCredit(val) {
+            creditHistory = val;
+            document.getElementById('creditGood').className = 'credit-opt' + (val === 1 ? ' good-sel' : '');
+            document.getElementById('creditBad').className = 'credit-opt' + (val === 0 ? ' bad-sel' : '');
+            checkReady();
+            if (hasRun) render();
+        }
+
+        function onField(el) {
+            el.value !== '' ? el.classList.add('filled') : el.classList.remove('filled');
+            checkReady();
+            if (hasRun) render();
+        }
+
+        function onNoise(val) {
+            noiseLevel = +val;
+            document.getElementById('noiseValLbl').textContent = val + '%';
+            if (hasRun) render();
+        }
+
+        function onThresh(val) {
+            threshDrop = +val;
+            document.getElementById('threshLbl').textContent = val + '%';
+            if (hasRun) render();
+        }
+
+        function checkReady() {
+            const ok = document.getElementById('appIncome').value !== '' &&
+                document.getElementById('coAppIncome').value !== '' &&
+                document.getElementById('loanAmt').value !== '' &&
+                document.getElementById('loanTerm').value !== '' &&
+                creditHistory !== null;
+            const btn = document.getElementById('runBtn');
+            btn.disabled = !ok;
+            document.getElementById('btnTxt').textContent = ok ? 'Run Robustness Test →' : 'Fill all fields to run';
+        }
+
+        async function runAll() {
+            const bar = document.getElementById('loadingBar');
+            bar.classList.add('on');
+            const runBtn = document.getElementById('runBtn');
+            const btnTxt = document.getElementById('btnTxt');
+            runBtn.disabled = true;
+            btnTxt.textContent = 'Analyzing via API...';
+
+            const active = ALGOS.filter(a => a.active);
+            const reqData = {
+                ApplicantIncome: document.getElementById('appIncome').value,
+                CoapplicantIncome: document.getElementById('coAppIncome').value || 0,
+                LoanAmount: document.getElementById('loanAmt').value,
+                Loan_Amount_Term: document.getElementById('loanTerm').value || 360,
+                Credit_History: creditHistory,
+                noise_level: noiseLevel,
+                noise_type: document.getElementById('noiseType').value
+            };
+
+            aiResults = {};
+            try {
+                for (let a of active) {
+                    const res = await fetch('http://localhost:5000/analyze', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ ...reqData, algorithm_id: a.id })
+                    });
+                    if (res.ok) aiResults[a.id] = await res.json();
+                }
+            } catch (err) { console.error(err); }
+
+            bar.classList.remove('on');
+            hasRun = true;
+            render();
+            runBtn.disabled = false;
+            btnTxt.textContent = 'Re-run Analysis →';
+        }
+
+        /* ── RENDER ── */
+        function show(id) { document.getElementById(id).classList.remove('hidden'); }
+        function hide(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function render() {
+            const baseP = computeBaseP();
+            const active = ALGOS.filter(a => a.active);
+            const approved = baseP >= 0.5;
+
+            hide('emptyState');
+
+            // Verdict
+            const vc = document.getElementById('verdictCard');
+            vc.classList.remove('hidden', 'approved', 'rejected');
+            vc.classList.add(approved ? 'approved' : 'rejected', 'fade-up');
+
+            const pct = Math.round(baseP * 100);
+            const circumference = 2 * Math.PI * 28;
+            const dashVal = circumference * (1 - baseP);
+            const scoreColor = approved ? '#0b7b4e' : '#c0392b';
+
+            vc.innerHTML = `
+    <div class="verdict-left">
+      <div class="verdict-tag">Loan Prediction · ${noiseLevel}% noise</div>
+      <div class="verdict-main">${approved ? 'Likely Approved' : 'Likely Rejected'}</div>
+      <div class="verdict-sub">
+        Credit: ${creditHistory === 1 ? 'Good' : 'Poor'} &nbsp;·&nbsp;
+        Applicant income: ₹${(+document.getElementById('appIncome').value || 0).toLocaleString('en-IN')} &nbsp;·&nbsp;
+        Loan: ₹${document.getElementById('loanAmt').value || '—'}K / ${document.getElementById('loanTerm').value || '—'} mo
+      </div>
+    </div>
+    <div class="verdict-score">
+      <div class="score-ring">
+        <svg width="70" height="70" viewBox="0 0 70 70">
+          <circle cx="35" cy="35" r="28" fill="none" stroke="#e3e7ef" stroke-width="5"/>
+          <circle cx="35" cy="35" r="28" fill="none" stroke="${scoreColor}" stroke-width="5"
+            stroke-dasharray="${circumference}" stroke-dashoffset="${dashVal}"
+            stroke-linecap="round" style="transition:stroke-dashoffset 0.6s ease"/>
+        </svg>
+        <div class="score-num">${pct}%</div>
+      </div>
+      <div class="score-label">Risk Score</div>
+    </div>
+  `;
+
+            // Stats strip
+            show('statsStrip');
+            const ss = document.getElementById('statsStrip');
+            ss.innerHTML = '';
+            active.forEach(a => {
+                const cur = accAt(a.id, noiseLevel);
+                const base0 = accAt(a.id, 0);
+                const thr = threshNoise(a.id);
+                const drop = ((base0 - cur) / base0 * 100).toFixed(1);
+                const col = cur > base0 * 0.90 ? '#0b7b4e' : cur > base0 * 0.75 ? '#b45309' : '#c0392b';
+
+                const card = document.createElement('div');
+                card.className = 'stat-card fade-up';
+                card.style.setProperty('--c', a.color);
+                card.innerHTML = `
+      <div class="stat-algo-name">${a.short}</div>
+      <div class="stat-acc" style="color:${col}">${(cur * 100).toFixed(1)}%</div>
+      <div class="stat-drop">−${drop}% at ${noiseLevel}%</div>
+      <div class="stat-thr">Stable → ${thr}%</div>
+    `;
+                ss.appendChild(card);
+            });
+
+            // Chart
+            show('chartCmRow');
+            mainChart.data.labels = Array.from({ length: 11 }, (_, i) => i * 5 + '%');
+            mainChart.data.datasets = active.map(a => ({
+                label: a.name,
+                data: curve(a.id),
+                borderColor: a.color,
+                backgroundColor: 'transparent',
+                borderWidth: 2,
+                pointRadius: Array.from({ length: 11 }, (_, i) => i * 5 === noiseLevel ? 6 : 3),
+                pointBackgroundColor: Array.from({ length: 11 }, (_, i) => i * 5 === noiseLevel ? a.color : 'transparent'),
+                pointBorderColor: a.color,
+                tension: 0.4,
+            }));
+            mainChart.update('none');
+
+            // Confusion Matrix
+            updateCM();
+
+            // Robustness ranking
+            show('robCard');
+            const scored = active.map(a => ({
+                ...a, thr: threshNoise(a.id),
+                score: threshNoise(a.id) / 50 * 100,
+            })).sort((a, b) => b.score - a.score);
+
+            document.getElementById('robRows').innerHTML = scored.map(a => `
+    <div class="rob-row">
+      <div class="rob-meta">
+        <div class="rob-algo-name" style="color:${a.color}">${a.name}</div>
+        <div class="rob-score-txt">${a.score.toFixed(0)} / 100</div>
+      </div>
+      <div class="rob-bar-bg">
+        <div class="rob-bar-fill" style="width:${a.score}%;background:${a.color};"></div>
+      </div>
+      <div class="rob-cap">Stable up to ${a.thr}% noise</div>
+    </div>
+  `).join('');
+
+            // Metrics table
+            show('metricsCard');
+            document.getElementById('metricsBody').innerHTML = active.map(a => {
+                const acc = accAt(a.id, noiseLevel);
+                const f1 = Math.min(0.99, acc * 0.97);
+                const prec = Math.min(0.99, acc * 0.98);
+                const rec = Math.min(0.99, acc * 0.96);
+                const bar = (v) => `<div class="bar-cell">
+      <div class="bar-mini" style="width:${(v * 72).toFixed(0)}px;background:${a.color};"></div>
+      ${(v * 100).toFixed(1)}%
+    </div>`;
+                return `<tr>
+      <td class="algo-col" style="color:${a.color}">${a.name}</td>
+      <td>${bar(acc)}</td><td>${bar(f1)}</td><td>${bar(prec)}</td><td>${bar(rec)}</td>
+    </tr>`;
+            }).join('');
+
+            // Conclusion
+            show('conclusionCard');
+            const best = scored[0];
+            const worst = scored[scored.length - 1];
+            document.getElementById('concBody').innerHTML = `
+    Based on the applicant profile — income ₹${(+document.getElementById('appIncome').value || 0).toLocaleString('en-IN')},
+    co-applicant ₹${(+document.getElementById('coAppIncome').value || 0).toLocaleString('en-IN')},
+    loan ₹${document.getElementById('loanAmt').value || '—'}K over ${document.getElementById('loanTerm').value || '—'} months,
+    credit history <strong>${creditHistory === 1 ? 'good' : 'poor'}</strong> — the computed risk score is
+    <strong>${(baseP * 100).toFixed(1)}%</strong>.
+    <strong>${best.name}</strong> demonstrates the highest robustness, remaining stable up to
+    <strong>${best.thr}% noise</strong>, while <strong>${worst.name}</strong> degrades
+    beyond the ${threshDrop}% threshold at just <strong>${worst.thr}% noise</strong>.
+    Robustness gap: <strong>${best.thr - worst.thr} noise points</strong>.
+  `;
+
+            document.getElementById('concChips').innerHTML = scored.map((a, i) => `
+    <div class="conc-chip">
+      <div style="width:7px;height:7px;border-radius:50%;background:${a.color};flex-shrink:0;"></div>
+      #${i + 1} ${a.short} — ${a.thr}%
+    </div>
+  `).join('');
+        }
+
+        function updateCM() {
+            const a = ALGOS.find(x => x.id === selectedCmAlgo);
+            if (!a) return;
+            const acc = accAt(a.id, noiseLevel);
+            const total = 200;
+            const cor = Math.round(acc * total);
+            const wrong = total - cor;
+            const fp = Math.round(wrong * 0.45);
+            const fn = wrong - fp;
+            const tp = Math.round(cor * 0.52);
+            const tn = cor - tp;
+
+            document.getElementById('cmTP').textContent = tp;
+            document.getElementById('cmFP').textContent = fp;
+            document.getElementById('cmFN').textContent = fn;
+            document.getElementById('cmTN').textContent = tn;
+
+            const prec = tp + fp > 0 ? tp / (tp + fp) : 0;
+            const rec = tp + fn > 0 ? tp / (tp + fn) : 0;
+            const f1 = prec + rec > 0 ? 2 * prec * rec / (prec + rec) : 0;
+            const specif = tn + fp > 0 ? tn / (tn + fp) : 0;
+
+            document.getElementById('cmMetrics').innerHTML = [
+                { k: 'Precision', v: (prec * 100).toFixed(1) + '%' },
+                { k: 'Recall', v: (rec * 100).toFixed(1) + '%' },
+                { k: 'F1-Score', v: (f1 * 100).toFixed(1) + '%' },
+                { k: 'Specificity', v: (specif * 100).toFixed(1) + '%' },
+            ].map(m => `<div class="cm-metric-pill">
+    <div class="cm-metric-val">${m.v}</div>
+    <div class="cm-metric-key">${m.k}</div>
+  </div>`).join('');
+        }
+
+        function resetResults() {
+            ['verdictCard', 'statsStrip', 'chartCmRow', 'robCard', 'metricsCard', 'conclusionCard']
+                .forEach(id => document.getElementById(id).classList.add('hidden'));
+            document.getElementById('emptyState').classList.remove('hidden');
+            creditHistory = null;
+            noiseLevel = 0;
+            document.getElementById('noiseSlider').value = 0;
+            document.getElementById('noiseValLbl').textContent = '0%';
+            document.getElementById('appIncome').value = '';
+            document.getElementById('coAppIncome').value = '';
+            document.getElementById('loanAmt').value = '';
+            document.getElementById('loanTerm').value = '';
+            document.getElementById('creditGood').className = 'credit-opt';
+            document.getElementById('creditBad').className = 'credit-opt';
+            ['appIncome', 'coAppIncome', 'loanAmt', 'loanTerm'].forEach(id =>
+                document.getElementById(id).classList.remove('filled'));
+            document.getElementById('runBtn').disabled = true;
+            document.getElementById('btnTxt').textContent = 'Fill all fields to run';
+        }
+
+        /* ── TOAST ── */
+        function showToast(msg) {
+            const t = document.createElement('div');
+            t.className = 'toast';
+            t.textContent = msg;
+            document.body.appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+    </script>
+</body>
+
+</html>
