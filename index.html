@@ -1956,7 +1956,7 @@
                     a.active = !a.active;
                     d.classList.toggle('on', a.active);
                     d.querySelector('.achip-dot').style.background = a.active ? a.color : '#cdd3df';
-                    if (hasRun) render();
+                    if (hasRun) debounceRunAll();
                 };
                 el.appendChild(d);
             });
