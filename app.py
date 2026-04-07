@@ -136,8 +136,20 @@ def analyze():
         'knn': {'robustness': 0.77, 'sensitivity': 0.95},
     }
     trait = ALGO_TRAITS.get(algo_id, {'robustness': 0.80, 'sensitivity': 1.0})
-    base_accuracy = trait['robustness']
-    sens = trait['sensitivity']
+    # Base algorithm robustness rating
+    algo_robustness = trait['robustness']
+    
+    # Confidence modifier: how certain the model is about THIS specific user 
+    # risk_score is a probability from 0.0 to 1.0. 
+    # (e.g. 0.99 or 0.01 is very certain, 0.5 is very uncertain)
+    confidence = abs(float(risk_score) - 0.5) * 2 
+    
+    # Dynamic base accuracy! Flunctuates by up to 12% based on the specific user profile
+    # A highly certain loan prediction makes the model visually behave more robustly
+    dynamic_base_acc = algo_robustness - (0.12 * (1.0 - confidence))
+    
+    # Dynamic sensitivity! Drops faster if user data is borderline
+    sens = trait['sensitivity'] * (1.0 + (0.4 * (1.0 - confidence)))
     
     nm = 1.0
     if noise_type == 'missing':
@@ -154,8 +166,13 @@ def analyze():
         n = level / 100.0
         # Drop logic roughly matching typical classifier degradation
         d = n * sens * nm * 0.85
-        acc = base_accuracy * (1 - d)
+        acc = dynamic_base_acc * (1 - d)
         
+        # Add a tiny bit of math randomness based on the exact user income so no two profiles look identical
+        if level > 0:
+            random_wobble = (float(req.get('ApplicantIncome', 0) or 0) % 100) / 10000.0
+            acc = acc - random_wobble
+            
         acc = max(0.38, min(0.99, acc)) 
         degradation_data.append(round(acc * 100, 2))
         

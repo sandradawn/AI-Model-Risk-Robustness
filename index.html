@@ -1796,15 +1796,15 @@
                                     <div class="cm-val" id="cmTP">—</div>
                                     <div class="cm-lbl">TP</div>
                                 </div>
-                                <div class="cm-cell fp">
-                                    <div class="cm-val" id="cmFP">—</div>
-                                    <div class="cm-lbl">FP</div>
-                                </div>
-                                <!-- row 2 -->
-                                <div class="cm-axis vert">Actual −</div>
                                 <div class="cm-cell fn">
                                     <div class="cm-val" id="cmFN">—</div>
                                     <div class="cm-lbl">FN</div>
+                                </div>
+                                <!-- row 2 -->
+                                <div class="cm-axis vert">Actual −</div>
+                                <div class="cm-cell fp">
+                                    <div class="cm-val" id="cmFP">—</div>
+                                    <div class="cm-lbl">FP</div>
                                 </div>
                                 <div class="cm-cell tn">
                                     <div class="cm-val" id="cmTN">—</div>
@@ -2053,24 +2053,31 @@
         }
 
         /* ── EVENTS ── */
+        let debounceTimer = null;
+        function debounceRunAll() {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => { if(hasRun) runAll(); }, 300);
+        }
+
         function setCredit(val) {
             creditHistory = val;
             document.getElementById('creditGood').className = 'credit-opt' + (val === 1 ? ' good-sel' : '');
             document.getElementById('creditBad').className = 'credit-opt' + (val === 0 ? ' bad-sel' : '');
             checkReady();
-            if (hasRun) render();
+            debounceRunAll();
         }
 
         function onField(el) {
             el.value !== '' ? el.classList.add('filled') : el.classList.remove('filled');
             checkReady();
-            if (hasRun) render();
+            debounceRunAll();
         }
 
         function onNoise(val) {
             noiseLevel = +val;
             document.getElementById('noiseValLbl').textContent = val + '%';
             if (hasRun) render();
+            debounceRunAll();
         }
 
         function onThresh(val) {
@@ -2117,9 +2124,16 @@
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ ...reqData, algorithm_id: a.id })
                     });
-                    if (res.ok) aiResults[a.id] = await res.json();
+                    if (res.ok) {
+                        aiResults[a.id] = await res.json();
+                    } else {
+                        alert(`Backend Error: Algorithm ${a.id} failed. Is app.py running properly?`);
+                    }
                 }
-            } catch (err) { console.error(err); }
+            } catch (err) { 
+                console.error(err); 
+                alert("CRITICAL ERROR: Cannot connect to Python backend! Please make sure you are running 'python app.py' in your terminal and it says 'Running on http://127.0.0.1:5000'.");
+            }
 
             bar.classList.remove('on');
             hasRun = true;
