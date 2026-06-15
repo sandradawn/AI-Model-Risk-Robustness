@@ -4,17 +4,33 @@ An enterprise-grade platform designed to evaluate and demonstrate the operationa
 
 ## 🚀 Key Features
 
-- **Multi-Model Support**: Simultaneously runs predictions using four state-of-the-art ensemble models:
-  - Random Forest (RF)
-  - XGBoost (XGB)
-  - LightGBM (LGBM)
-  - Gradient Boosting (GB)
+- 🤖 Models Evaluated
+Random Forest (RF)
+Logistic Regression (LR)
+Support Vector Machine (SVM)
+Decision Tree (DT)
+<img width="1853" height="922" alt="Screenshot 2026-06-15 161621" src="https://github.com/user-attachments/assets/7c44e6f3-cc3f-4400-80f9-e706b15a3aec" />
+<img width="542" height="531" alt="Screenshot 2026-06-15 161208" src="https://github.com/user-attachments/assets/77ba62db-b9e9-458b-ad58-3f908fd0c967" />
+<img width="727" height="567" alt="Screenshot 2026-06-15 161356" src="https://github.com/user-attachments/assets/4c320896-e1ff-4caa-aeab-42ac193ea9e2" />
+<img width="1257" height="357" alt="Screenshot 2026-06-15 161458" src="https://github.com/user-attachments/assets/c42048c0-dfbb-4138-a2b2-a2548c826c14" />
+<img width="1261" height="275" alt="Screenshot 2026-06-15 161428" src="https://github.com/user-attachments/assets/23615074-4b22-4dfd-ae84-9575391b52d4" />
+
 - **Real-time Degradation Simulation**:
   - **Gaussian Noise**: Simulates natural data entry errors and sensor noise.
   - **Missing Data (Dropout)**: Simulates incomplete data applications.
   - **Adversarial Perturbation**: Simulates targeted attacks optimizing for false loan approvals.
 - **Dynamic Feature Alignment**: Automatically handles and pads continuous and categorical variable mismatches across 600+ complex features to prevent runtime crashes.
 - **Real-Time Analytics Dashboard**: Visualizes performance degradation trajectories compared to a clean baseline.
+
+
+
+
+
+
+
+
+
+
 
 ## 🛠️ System Architecture
 
